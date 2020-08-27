@@ -117,7 +117,7 @@ static uint8_t CDC_IN_EP[NUMBER_OF_CDC] = {CDC0_IN_EP, CDC1_IN_EP, CDC2_IN_EP, C
 static uint8_t CDC_CMD_EP[NUMBER_OF_CDC] = {CDC0_CMD_EP, CDC1_CMD_EP, CDC2_CMD_EP, CDC3_CMD_EP};
 static uint8_t CDC_OUT_EP[NUMBER_OF_CDC] = {CDC0_OUT_EP, CDC1_OUT_EP, CDC2_OUT_EP, CDC3_OUT_EP};
 
-static uint8_t EP_To_Class[8] = {0, 0, 1, 1, 2, 2, 3, 3};
+static uint8_t EP_To_Class[9] = {0, 0, 0, 1, 1, 2, 2, 3, 3};
 
 uint8_t *USBD_CDC_GetDeviceQualifierDescriptor(uint16_t *length);
 
@@ -167,10 +167,10 @@ USBD_ClassTypeDef USBD_CDC =
 __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
     {
         /*Configuration Descriptor*/
-        0x09,                             /* bLength: Configuration Descriptor size */
-        USB_DESC_TYPE_CONFIGURATION,      /* bDescriptorType: Configuration */
-        (USB_CDC_CONFIG_DESC_SIZ & 0xFF), /* wTotalLength:no of returned bytes */
-        (USB_CDC_CONFIG_DESC_SIZ >> 8) & 0xFF,
+        0x09,                            /* bLength: Configuration Descriptor size */
+        USB_DESC_TYPE_CONFIGURATION,     /* bDescriptorType: Configuration */
+        LOBYTE(USB_CDC_CONFIG_DESC_SIZ), /* wTotalLength:no of returned bytes */
+        HIBYTE(USB_CDC_CONFIG_DESC_SIZ),
         0x08, /* bNumInterfaces: 2 interface */
         0x01, /* bConfigurationValue: Configuration value */
         0x00, /* iConfiguration: Index of string descriptor describing the configuration */
@@ -552,7 +552,6 @@ static uint8_t USBD_CDC_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
 
   for (uint8_t i = 0; i < NUMBER_OF_CDC; i++)
   {
-
     if (pdev->dev_speed == USBD_SPEED_HIGH)
     {
       /* Open EP IN */
