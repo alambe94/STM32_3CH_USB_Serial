@@ -117,7 +117,7 @@ static uint8_t CDC_IN_EP[4] = {CDC0_IN_EP, CDC1_IN_EP, CDC2_IN_EP, CDC3_IN_EP};
 static uint8_t CDC_CMD_EP[4] = {CDC0_CMD_EP, CDC1_CMD_EP, CDC2_CMD_EP, CDC3_CMD_EP};
 static uint8_t CDC_OUT_EP[4] = {CDC0_OUT_EP, CDC1_OUT_EP, CDC2_OUT_EP, CDC3_OUT_EP};
 
-static uint8_t EP_To_Class[9] = {0, 0, 0, 1, 1, 2, 2, 3, 3};
+static uint8_t EP_To_Interface[9] = {0, 0, 0, 1, 1, 2, 2, 3, 3};
 
 uint8_t *USBD_CDC_GetDeviceQualifierDescriptor(uint16_t *length);
 
@@ -760,7 +760,7 @@ static uint8_t USBD_CDC_DataIn(USBD_HandleTypeDef *pdev, uint8_t epnum)
 {
   PCD_HandleTypeDef *hpcd = pdev->pData;
 
-  uint8_t cdc_index = EP_To_Class[epnum];
+  uint8_t cdc_index = EP_To_Interface[epnum];
   USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef *)pdev->pClassDataCDC[cdc_index];
 
   if (pdev->pClassDataCDC[cdc_index] != NULL)
@@ -794,7 +794,7 @@ static uint8_t USBD_CDC_DataIn(USBD_HandleTypeDef *pdev, uint8_t epnum)
   */
 static uint8_t USBD_CDC_DataOut(USBD_HandleTypeDef *pdev, uint8_t epnum)
 {
-  uint8_t cdc_index = EP_To_Class[epnum];
+  uint8_t cdc_index = EP_To_Interface[epnum];
   USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef *)pdev->pClassDataCDC[cdc_index];
 
   /* Get the received data length */
