@@ -42,7 +42,7 @@ extern "C"
   * @{
   */
 
-#define NUMBER_OF_CDC 4
+#define NUMBER_OF_CDC 3 // max is 3
 
 #define CDC0_IN_EP 0x81U  /* EP1 for data IN */
 #define CDC0_CMD_EP 0x82U /* EP2 for CDC commands */
@@ -70,10 +70,10 @@ extern "C"
 
 /* CDC Endpoints parameters: you can fine tune these values depending on the needed baudrates and performance. */
 #define CDC_DATA_HS_MAX_PACKET_SIZE 512U /* Endpoint IN & OUT Packet size */
-#define CDC_DATA_FS_MAX_PACKET_SIZE 48U  /* Endpoint IN & OUT Packet size */
+#define CDC_DATA_FS_MAX_PACKET_SIZE 32U  /* Endpoint IN & OUT Packet size */
 #define CDC_CMD_PACKET_SIZE 8U           /* Control Endpoint Packet size */
 
-#define USB_CDC_CONFIG_DESC_SIZ 273U
+#define USB_CDC_CONFIG_DESC_SIZ (9 + 66 * NUMBER_OF_CDC)
 #define CDC_DATA_HS_IN_PACKET_SIZE CDC_DATA_HS_MAX_PACKET_SIZE
 #define CDC_DATA_HS_OUT_PACKET_SIZE CDC_DATA_HS_MAX_PACKET_SIZE
 

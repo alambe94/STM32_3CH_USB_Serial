@@ -113,9 +113,9 @@ static uint8_t USBD_CDC_EP0_RxReady(USBD_HandleTypeDef *pdev);
 
 static uint8_t *USBD_CDC_GetFSCfgDesc(uint16_t *length);
 
-static uint8_t CDC_IN_EP[NUMBER_OF_CDC] = {CDC0_IN_EP, CDC1_IN_EP, CDC2_IN_EP, CDC3_IN_EP};
-static uint8_t CDC_CMD_EP[NUMBER_OF_CDC] = {CDC0_CMD_EP, CDC1_CMD_EP, CDC2_CMD_EP, CDC3_CMD_EP};
-static uint8_t CDC_OUT_EP[NUMBER_OF_CDC] = {CDC0_OUT_EP, CDC1_OUT_EP, CDC2_OUT_EP, CDC3_OUT_EP};
+static uint8_t CDC_IN_EP[4] = {CDC0_IN_EP, CDC1_IN_EP, CDC2_IN_EP, CDC3_IN_EP};
+static uint8_t CDC_CMD_EP[4] = {CDC0_CMD_EP, CDC1_CMD_EP, CDC2_CMD_EP, CDC3_CMD_EP};
+static uint8_t CDC_OUT_EP[4] = {CDC0_OUT_EP, CDC1_OUT_EP, CDC2_OUT_EP, CDC3_OUT_EP};
 
 static uint8_t EP_To_Class[9] = {0, 0, 0, 1, 1, 2, 2, 3, 3};
 
@@ -171,11 +171,11 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         USB_DESC_TYPE_CONFIGURATION,     /* bDescriptorType: Configuration */
         LOBYTE(USB_CDC_CONFIG_DESC_SIZ), /* wTotalLength:no of returned bytes */
         HIBYTE(USB_CDC_CONFIG_DESC_SIZ),
-        0x08, /* bNumInterfaces: 2 interface */
-        0x01, /* bConfigurationValue: Configuration value */
-        0x00, /* iConfiguration: Index of string descriptor describing the configuration */
-        0xC0, /* bmAttributes: self powered */
-        0x32, /* MaxPower 0 mA */
+        (2 * NUMBER_OF_CDC), /* bNumInterfaces: 2 interface */
+        0x01,                /* bConfigurationValue: Configuration value */
+        0x00,                /* iConfiguration: Index of string descriptor describing the configuration */
+        0xC0,                /* bmAttributes: self powered */
+        0x32,                /* MaxPower 0 mA */
 
         /********************  CDC0 block ********************/
         /******** IAD to associate the two CDC interfaces */
@@ -264,12 +264,12 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         LOBYTE(CDC_DATA_FS_MAX_PACKET_SIZE), /* wMaxPacketSize: */
         HIBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),
         0x00,
-
+#if (NUMBER_OF_CDC > 1)
         /********************  CDC1 block ********************/
         /******** IAD to associate the two CDC interfaces */
         0x08, /* bLength */
         0x0B, /* bDescriptorType */
-        0x03, /* bFirstInterface */
+        0x02, /* bFirstInterface */
         0x02, /* bInterfaceCount */
         0x02, /* bFunctionClass */
         0x02, /* bFunctionSubClass */
@@ -279,7 +279,7 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         /* Interface Descriptor */
         0x09,                    /* bLength: Interface Descriptor size */
         USB_DESC_TYPE_INTERFACE, /* bDescriptorType: Interface */
-        0x03,                    /* bInterfaceNumber: Number of Interface */
+        0x02,                    /* bInterfaceNumber: Number of Interface */
         0x00,                    /* bAlternateSetting: Alternate setting */
         0x01,                    /* bNumEndpoints: One endpoints used */
         0x02,                    /* bInterfaceClass: Communication Interface Class */
@@ -299,7 +299,7 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         0x24, /* bDescriptorType: CS_INTERFACE */
         0x01, /* bDescriptorSubtype: Call Management Func Desc */
         0x00, /* bmCapabilities: D0+D1 */
-        0x04, /* bDataInterface: 1 */
+        0x03, /* bDataInterface: 1 */
 
         /* ACM Functional Descriptor */
         0x04, /* bFunctionLength */
@@ -311,8 +311,8 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         0x05, /* bFunctionLength */
         0x24, /* bDescriptorType: CS_INTERFACE */
         0x06, /* bDescriptorSubtype: Union func desc */
-        0x03, /* bMasterInterface: Communication class interface */
-        0x04, /* bSlaveInterface0: Data Class Interface */
+        0x02, /* bMasterInterface: Communication class interface */
+        0x03, /* bSlaveInterface0: Data Class Interface */
 
         /* Endpoint 2 Descriptor */
         0x07,                        /* bLength: Endpoint Descriptor size */
@@ -327,7 +327,7 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         /* Data class interface descriptor */
         0x09,                    /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_INTERFACE, /* bDescriptorType: */
-        0x04,                    /* bInterfaceNumber: Number of Interface */
+        0x03,                    /* bInterfaceNumber: Number of Interface */
         0x00,                    /* bAlternateSetting: Alternate setting */
         0x02,                    /* bNumEndpoints: Two endpoints used */
         0x0A,                    /* bInterfaceClass: CDC */
@@ -352,12 +352,13 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         LOBYTE(CDC_DATA_FS_MAX_PACKET_SIZE), /* wMaxPacketSize: */
         HIBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),
         0x00, /* bInterval: ignore for Bulk transfer */
-
+#endif
+#if (NUMBER_OF_CDC > 2)
         /********************  CDC2 block ********************/
         /******** IAD to associate the two CDC interfaces */
         0x08, /* bLength */
         0x0B, /* bDescriptorType */
-        0x05, /* bFirstInterface */
+        0x04, /* bFirstInterface */
         0x02, /* bInterfaceCount */
         0x02, /* bFunctionClass */
         0x02, /* bFunctionSubClass */
@@ -367,7 +368,7 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         /* Interface Descriptor */
         0x09,                    /* bLength: Interface Descriptor size */
         USB_DESC_TYPE_INTERFACE, /* bDescriptorType: Interface */
-        0x05,                    /* bInterfaceNumber: Number of Interface */
+        0x04,                    /* bInterfaceNumber: Number of Interface */
         0x00,                    /* bAlternateSetting: Alternate setting */
         0x01,                    /* bNumEndpoints: One endpoints used */
         0x02,                    /* bInterfaceClass: Communication Interface Class */
@@ -387,7 +388,7 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         0x24, /* bDescriptorType: CS_INTERFACE */
         0x01, /* bDescriptorSubtype: Call Management Func Desc */
         0x00, /* bmCapabilities: D0+D1 */
-        0x06, /* bDataInterface: 1 */
+        0x05, /* bDataInterface: 1 */
 
         /* ACM Functional Descriptor */
         0x04, /* bFunctionLength */
@@ -399,8 +400,8 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         0x05, /* bFunctionLength */
         0x24, /* bDescriptorType: CS_INTERFACE */
         0x06, /* bDescriptorSubtype: Union func desc */
-        0x05, /* bMasterInterface: Communication class interface */
-        0x06, /* bSlaveInterface0: Data Class Interface */
+        0x04, /* bMasterInterface: Communication class interface */
+        0x05, /* bSlaveInterface0: Data Class Interface */
 
         /* Endpoint 2 Descriptor */
         0x07,                        /* bLength: Endpoint Descriptor size */
@@ -415,7 +416,7 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         /* Data class interface descriptor */
         0x09,                    /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_INTERFACE, /* bDescriptorType: */
-        0x06,                    /* bInterfaceNumber: Number of Interface */
+        0x05,                    /* bInterfaceNumber: Number of Interface */
         0x00,                    /* bAlternateSetting: Alternate setting */
         0x02,                    /* bNumEndpoints: Two endpoints used */
         0x0A,                    /* bInterfaceClass: CDC */
@@ -440,12 +441,13 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         LOBYTE(CDC_DATA_FS_MAX_PACKET_SIZE), /* wMaxPacketSize: */
         HIBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),
         0x00,
-
+#endif
+#if (NUMBER_OF_CDC > 3)
         /********************  CDC3 block ********************/
         /******** IAD to associate he two CDC interfaces */
         0x08, /* bLength */
         0x0B, /* bDescriptorType */
-        0x07, /* bFirstInterface */
+        0x06, /* bFirstInterface */
         0x02, /* bInterfaceCount */
         0x02, /* bFunctionClass */
         0x02, /* bFunctionSubClass */
@@ -455,7 +457,7 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         /* Interface Descriptor */
         0x09,                    /* bLength: Interface Descriptor size */
         USB_DESC_TYPE_INTERFACE, /* bDescriptorType: Interface */
-        0x07,                    /* bInterfaceNumber: Number of Interface */
+        0x06,                    /* bInterfaceNumber: Number of Interface */
         0x00,                    /* bAlternateSetting: Alternate setting */
         0x01,                    /* bNumEndpoints: One endpoints used */
         0x02,                    /* bInterfaceClass: Communication Interface Class */
@@ -475,7 +477,7 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         0x24, /* bDescriptorType: CS_INTERFACE */
         0x01, /* bDescriptorSubtype: Call Management Func Desc */
         0x00, /* bmCapabilities: D0+D1 */
-        0x08, /* bDataInterface: 1 */
+        0x07, /* bDataInterface: 1 */
 
         /* ACM Functional Descriptor */
         0x04, /* bFunctionLength */
@@ -487,8 +489,8 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         0x05, /* bFunctionLength */
         0x24, /* bDescriptorType: CS_INTERFACE */
         0x06, /* bDescriptorSubtype: Union func desc */
-        0x07, /* bMasterInterface: Communication class interface */
-        0x08, /* bSlaveInterface0: Data Class Interface */
+        0x06, /* bMasterInterface: Communication class interface */
+        0x07, /* bSlaveInterface0: Data Class Interface */
 
         /* Endpoint 2 Descriptor */
         0x07,                        /* bLength: Endpoint Descriptor size */
@@ -503,7 +505,7 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         /* Data class interface descriptor */
         0x09,                    /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_INTERFACE, /* bDescriptorType: */
-        0x08,                    /* bInterfaceNumber: Number of Interface */
+        0x07,                    /* bInterfaceNumber: Number of Interface */
         0x00,                    /* bAlternateSetting: Alternate setting */
         0x02,                    /* bNumEndpoints: Two endpoints used */
         0x0A,                    /* bInterfaceClass: CDC */
@@ -528,6 +530,7 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
         LOBYTE(CDC_DATA_FS_MAX_PACKET_SIZE), /* wMaxPacketSize: */
         HIBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),
         0x00, /* bInterval: ignore for Bulk transfer */
+#endif
 };
 
 /**
@@ -592,6 +595,7 @@ static uint8_t USBD_CDC_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
     }
 
     hcdc[i] = (USBD_CDC_HandleTypeDef *)pdev->pClassDataCDC[i];
+
     /* Init  physical Interface components */
     ((USBD_CDC_ItfTypeDef *)pdev->pUserDataCDC)->Init(i);
 
