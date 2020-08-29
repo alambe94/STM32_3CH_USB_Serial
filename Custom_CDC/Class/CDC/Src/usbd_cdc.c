@@ -113,11 +113,14 @@ static uint8_t USBD_CDC_EP0_RxReady(USBD_HandleTypeDef *pdev);
 
 static uint8_t *USBD_CDC_GetFSCfgDesc(uint16_t *length);
 
-static uint8_t CDC_IN_EP[4] = {CDC0_IN_EP, CDC1_IN_EP, CDC2_IN_EP, CDC3_IN_EP};
-static uint8_t CDC_CMD_EP[4] = {CDC0_CMD_EP, CDC1_CMD_EP, CDC2_CMD_EP, CDC3_CMD_EP};
-static uint8_t CDC_OUT_EP[4] = {CDC0_OUT_EP, CDC1_OUT_EP, CDC2_OUT_EP, CDC3_OUT_EP};
+static uint8_t CDC_IN_EP[] = {CDC0_IN_EP, CDC1_IN_EP, CDC2_IN_EP, CDC3_IN_EP};
+static uint8_t CDC_CMD_EP[] = {CDC0_CMD_EP, CDC1_CMD_EP, CDC2_CMD_EP, CDC3_CMD_EP};
+static uint8_t CDC_OUT_EP[] = {CDC0_OUT_EP, CDC1_OUT_EP, CDC2_OUT_EP, CDC3_OUT_EP};
 
 static uint8_t EP_To_Interface[9] = {0, 0, 0, 1, 1, 2, 2, 3, 3};
+static uint8_t W_Index_To_Interface[8] = {0, 0, 1, 1, 2, 2, 3, 3};
+
+static USBD_CDC_HandleTypeDef CDC_Handle[NUMBER_OF_CDC];
 
 uint8_t *USBD_CDC_GetDeviceQualifierDescriptor(uint16_t *length);
 
@@ -551,7 +554,7 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
 static uint8_t USBD_CDC_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
 {
   uint8_t ret = 0U;
-  USBD_CDC_HandleTypeDef *hcdc[NUMBER_OF_CDC];
+  USBD_CDC_HandleTypeDef *hcdc;
 
   for (uint8_t i = 0; i < NUMBER_OF_CDC; i++)
   {
@@ -588,31 +591,27 @@ static uint8_t USBD_CDC_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
     USBD_LL_OpenEP(pdev, CDC_CMD_EP[i], USBD_EP_TYPE_INTR, CDC_CMD_PACKET_SIZE);
     pdev->ep_in[CDC_CMD_EP[i] & 0xFU].is_used = 1U;
 
-    pdev->pClassDataCDC[i] = USBD_malloc(sizeof(USBD_CDC_HandleTypeDef));
-    if (pdev->pClassDataCDC[i] == NULL)
-    {
-      ret = 1U;
-    }
+    pdev->pClassDataCDC[i] = &CDC_Handle[i];
 
-    hcdc[i] = (USBD_CDC_HandleTypeDef *)pdev->pClassDataCDC[i];
+    hcdc = (USBD_CDC_HandleTypeDef *)pdev->pClassDataCDC[i];
 
     /* Init  physical Interface components */
     ((USBD_CDC_ItfTypeDef *)pdev->pUserDataCDC)->Init(i);
 
     /* Init Xfer states */
-    hcdc[i]->TxState = 0U;
-    hcdc[i]->RxState = 0U;
+    hcdc->TxState = 0U;
+    hcdc->RxState = 0U;
 
     if (pdev->dev_speed == USBD_SPEED_HIGH)
     {
       /* Prepare Out endpoint to receive next packet */
-      USBD_LL_PrepareReceive(pdev, CDC_OUT_EP[i], hcdc[i]->RxBuffer,
+      USBD_LL_PrepareReceive(pdev, CDC_OUT_EP[i], hcdc->RxBuffer,
                              CDC_DATA_HS_OUT_PACKET_SIZE);
     }
     else
     {
       /* Prepare Out endpoint to receive next packet */
-      USBD_LL_PrepareReceive(pdev, CDC_OUT_EP[i], hcdc[i]->RxBuffer,
+      USBD_LL_PrepareReceive(pdev, CDC_OUT_EP[i], hcdc->RxBuffer,
                              CDC_DATA_FS_OUT_PACKET_SIZE);
     }
   }
@@ -649,7 +648,6 @@ static uint8_t USBD_CDC_DeInit(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
     if (pdev->pClassDataCDC[i] != NULL)
     {
       ((USBD_CDC_ItfTypeDef *)pdev->pUserDataCDC)->DeInit(i);
-      USBD_free(pdev->pClassDataCDC[i]);
       pdev->pClassDataCDC[i] = NULL;
     }
   }
@@ -670,7 +668,7 @@ static uint8_t USBD_CDC_Setup(USBD_HandleTypeDef *pdev,
   uint16_t status_info = 0U;
   uint8_t ret = USBD_OK;
 
-  uint8_t cdc_index = req->wIndex;
+  uint8_t cdc_index = W_Index_To_Interface[req->wIndex];
   USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef *)pdev->pClassDataCDC[cdc_index];
 
   switch (req->bmRequest & USB_REQ_TYPE_MASK)

@@ -98,6 +98,7 @@ uint8_t UserTxBufferFS[NUMBER_OF_CDC][APP_TX_DATA_SIZE];
 /* USER CODE BEGIN PRIVATE_VARIABLES */
 
 USBD_CDC_LineCodingTypeDef Line_Coding[NUMBER_OF_CDC];
+
 uint32_t Write_Index[NUMBER_OF_CDC]; /* Increment this pointer or roll it back to start address when data are received over USART */
 uint32_t Read_Index[NUMBER_OF_CDC];  /* Increment this pointer or roll it back to start address when data are sent over USB */
 
@@ -133,7 +134,7 @@ static int8_t CDC_Control_FS(uint8_t cdc_index, uint8_t cmd, uint8_t *pbuf, uint
 static int8_t CDC_Receive_FS(uint8_t cdc_index, uint8_t *pbuf, uint32_t *Len);
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_DECLARATION */
-UART_HandleTypeDef *CDC_Index_To_Handle(uint8_t cdc_index)
+UART_HandleTypeDef *CDC_Index_To_UART_Handle(uint8_t cdc_index)
 {
   UART_HandleTypeDef *handle = NULL;
 
@@ -153,7 +154,7 @@ UART_HandleTypeDef *CDC_Index_To_Handle(uint8_t cdc_index)
   return handle;
 }
 
-uint8_t Handle_TO_CDC_Index(UART_HandleTypeDef *handle)
+uint8_t UART_Handle_TO_CDC_Index(UART_HandleTypeDef *handle)
 {
   uint8_t cdc_index = 0;
 
@@ -175,7 +176,7 @@ uint8_t Handle_TO_CDC_Index(UART_HandleTypeDef *handle)
 
 void Change_UART_Setting(uint8_t cdc_index)
 {
-  UART_HandleTypeDef *handle = CDC_Index_To_Handle(cdc_index);
+  UART_HandleTypeDef *handle = CDC_Index_To_UART_Handle(cdc_index);
 
   if (HAL_UART_DeInit(handle) != HAL_OK)
   {
@@ -236,6 +237,11 @@ void Change_UART_Setting(uint8_t cdc_index)
     break;
   }
 
+  if(Line_Coding[cdc_index].bitrate == 0)
+  {
+  	Line_Coding[cdc_index].bitrate = 115200;
+  }
+
   handle->Init.BaudRate = Line_Coding[cdc_index].bitrate;
   handle->Init.HwFlowCtl = UART_HWCONTROL_NONE;
   handle->Init.Mode = UART_MODE_TX_RX;
@@ -244,6 +250,14 @@ void Change_UART_Setting(uint8_t cdc_index)
   if (HAL_UART_Init(handle) != HAL_OK)
   {
     /* Initialization Error */
+    Error_Handler();
+  }
+
+  /* Put UART peripheral in IT reception process ########################*/
+  /* Any data received will be stored in "UserTxBufferFS" buffer  */
+  if (HAL_UART_Receive_IT(handle, (uint8_t *)UserTxBufferFS[cdc_index], 1) != HAL_OK)
+  {
+    /* Transfer error in reception process */
     Error_Handler();
   }
 }
@@ -272,15 +286,7 @@ static int8_t CDC_Init_FS(uint8_t cdc_index)
   /* ##-1- Set Application Buffers */
   USBD_CDC_SetRxBuffer(cdc_index, &hUsbDeviceFS, UserRxBufferFS[cdc_index]);
 
-  /*##-2- Put UART peripheral in IT reception process ########################*/
-  /* Any data received will be stored in "UserTxBufferFS" buffer  */
-  if (HAL_UART_Receive_IT(CDC_Index_To_Handle(cdc_index), (uint8_t *)UserTxBufferFS[cdc_index], 1) != HAL_OK)
-  {
-    /* Transfer error in reception process */
-    Error_Handler();
-  }
-
-  /*##-3- Start the TIM Base generation in interrupt mode ####################*/
+  /*##-2- Start the TIM Base generation in interrupt mode ####################*/
   /* Start Channel1 */
   if (HAL_TIM_Base_Start_IT(&htim4) != HAL_OK)
   {
@@ -300,7 +306,7 @@ static int8_t CDC_DeInit_FS(uint8_t cdc_index)
 {
   /* USER CODE BEGIN 4 */
   /* DeInitialize the UART peripheral */
-  if (HAL_UART_DeInit(CDC_Index_To_Handle(cdc_index)) != HAL_OK)
+  if (HAL_UART_DeInit(CDC_Index_To_UART_Handle(cdc_index)) != HAL_OK)
   {
     /* Initialization Error */
     Error_Handler();
@@ -412,7 +418,7 @@ static int8_t CDC_Control_FS(uint8_t cdc_index, uint8_t cmd, uint8_t *pbuf, uint
 static int8_t CDC_Receive_FS(uint8_t cdc_index, uint8_t *Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
-  HAL_UART_Transmit_DMA(CDC_Index_To_Handle(cdc_index), Buf, *Len);
+  HAL_UART_Transmit_DMA(CDC_Index_To_UART_Handle(cdc_index), Buf, *Len);
   return (USBD_OK);
   /* USER CODE END 6 */
 }
@@ -421,7 +427,7 @@ static int8_t CDC_Receive_FS(uint8_t cdc_index, uint8_t *Buf, uint32_t *Len)
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
   /* Initiate next USB packet transfer once UART completes transfer (transmitting data over Tx line) */
-  USBD_CDC_ReceivePacket(Handle_TO_CDC_Index(huart), &hUsbDeviceFS);
+  USBD_CDC_ReceivePacket(UART_Handle_TO_CDC_Index(huart), &hUsbDeviceFS);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
@@ -460,7 +466,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  uint8_t cdc_index = Handle_TO_CDC_Index(huart);
+  uint8_t cdc_index = UART_Handle_TO_CDC_Index(huart);
   /* Increment Index for buffer writing */
   Write_Index[cdc_index]++;
 
