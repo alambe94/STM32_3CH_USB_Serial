@@ -330,22 +330,22 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *pdev)
   HAL_PCD_RegisterIsoInIncpltCallback(&hpcd_USB_FS, PCD_ISOINIncompleteCallback);
 #endif /* USE_HAL_PCD_REGISTER_CALLBACKS */
   /* USER CODE BEGIN EndPoint_Configuration */
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , 0x00 , PCD_SNG_BUF, 0x18);
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , 0x80 , PCD_SNG_BUF, 0x58);
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , 0x00 , PCD_SNG_BUF, 0x40);
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , 0x80 , PCD_SNG_BUF, 0x80);
   /* USER CODE END EndPoint_Configuration */
   /* USER CODE BEGIN EndPoint_Configuration_CDC */
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC0_IN_EP , PCD_SNG_BUF, 0x58+32);
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC0_OUT_EP , PCD_SNG_BUF, 0x58+64);
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC0_IN_EP , PCD_SNG_BUF, 0x80+48);
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC0_OUT_EP , PCD_SNG_BUF, 0x80+96);
 
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC1_IN_EP , PCD_SNG_BUF, 0x58+64+32);
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC1_OUT_EP , PCD_SNG_BUF, 0x58+64+64);
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC1_IN_EP , PCD_SNG_BUF, 0x80+96+48);
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC1_OUT_EP , PCD_SNG_BUF, 0x80+96+96);
 
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC1_IN_EP , PCD_SNG_BUF, 0x58+64+64+32);
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC1_OUT_EP , PCD_SNG_BUF, 0x58+64+64+64);
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC2_IN_EP , PCD_SNG_BUF, 0x80+96+96+48);
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC2_OUT_EP , PCD_SNG_BUF, 0x80+96+96+96);
 
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC0_CMD_EP , PCD_SNG_BUF, 0x58+64+64+64+8);
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC1_CMD_EP , PCD_SNG_BUF, 0x58+64+64+64+16);
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC1_CMD_EP , PCD_SNG_BUF, 0x58+64+64+64+24);
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC0_CMD_EP , PCD_SNG_BUF, 0x80+96+96+96+8);
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC1_CMD_EP , PCD_SNG_BUF, 0x80+96+96+96+16);
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC2_CMD_EP , PCD_SNG_BUF, 0x80+96+96+96+24);
 
   /* USER CODE END EndPoint_Configuration_CDC */
   return USBD_OK;
