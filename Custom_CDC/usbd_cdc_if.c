@@ -256,7 +256,7 @@ void Change_UART_Setting(uint8_t cdc_index)
   }
 
   /** rx for uart and tx buffer of usb */
-  if (HAL_UART_Receive_DMA(handle, TX_Buffer[cdc_index], APP_TX_DATA_SIZE) != HAL_OK)
+  if (HAL_UART_Receive_IT(handle, (uint8_t *)TX_Buffer[cdc_index], 1) != HAL_OK)
   {
     /* Transfer error in reception process */
     Error_Handler();
@@ -438,11 +438,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     uint32_t buffptr;
     uint32_t buffsize;
 
-    UART_HandleTypeDef *handle = CDC_Index_To_UART_Handle(i);
-
-    /** update write index from dma counter */
-    Write_Index[i] = APP_TX_DATA_SIZE - handle->hdmarx->Instance->CNDTR;
-
     if (Read_Index[i] != Write_Index[i])
     {
       if (Read_Index[i] > Write_Index[i]) /* Rollback */
@@ -468,6 +463,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       }
     }
   }
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  uint8_t cdc_index = UART_Handle_TO_CDC_Index(huart);
+  /* Increment Index for buffer writing */
+  Write_Index[cdc_index]++;
+
+  /* To avoid buffer overflow */
+  if (Write_Index[cdc_index] == APP_RX_DATA_SIZE)
+  {
+    Write_Index[cdc_index] = 0;
+  }
+
+  /* Start another reception: provide the buffer pointer with offset and the buffer size */
+  HAL_UART_Receive_IT(huart, (uint8_t *)(TX_Buffer[cdc_index] + Write_Index[cdc_index]), 1);
 }
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 
