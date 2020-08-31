@@ -90,8 +90,8 @@
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
 
-#define APP_RX_DATA_SIZE  1024
-#define APP_TX_DATA_SIZE  1024
+#define APP_RX_DATA_SIZE 1024
+#define APP_TX_DATA_SIZE 1024
 
 /** RX buffer for USB */
 uint8_t RX_Buffer[NUMBER_OF_CDC][APP_RX_DATA_SIZE];
@@ -239,9 +239,9 @@ void Change_UART_Setting(uint8_t cdc_index)
     break;
   }
 
-  if(Line_Coding[cdc_index].bitrate == 0)
+  if (Line_Coding[cdc_index].bitrate == 0)
   {
-  	Line_Coding[cdc_index].bitrate = 115200;
+    Line_Coding[cdc_index].bitrate = 115200;
   }
 
   handle->Init.BaudRate = Line_Coding[cdc_index].bitrate;
@@ -256,7 +256,7 @@ void Change_UART_Setting(uint8_t cdc_index)
   }
 
   /** rx for uart and tx buffer of usb */
-  if (HAL_UART_Receive_IT(handle, (uint8_t *)TX_Buffer[cdc_index], 1) != HAL_OK)
+  if (HAL_UART_Receive_IT(handle, TX_Buffer[cdc_index], 1) != HAL_OK)
   {
     /* Transfer error in reception process */
     Error_Handler();
@@ -478,7 +478,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   }
 
   /* Start another reception: provide the buffer pointer with offset and the buffer size */
-  HAL_UART_Receive_IT(huart, (uint8_t *)(TX_Buffer[cdc_index] + Write_Index[cdc_index]), 1);
+  HAL_UART_Receive_IT(huart, (TX_Buffer[cdc_index] + Write_Index[cdc_index]), 1);
 }
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 
